@@ -1,4 +1,5 @@
 export const ErrorCodes = {
+    VALIDATION_ERROR: { status: 400, message: '입력값 검증에 실패했습니다.' }, 
     EMAIL_ALREADY_EXISTS: { status: 400, message: '이미 가입된 이메일입니다.' },
     INVALID_CREDENTIALS: { status: 401, message: '이메일 또는 비밀번호가 틀렸습니다.' },
     UNAUTHORIZED: { status: 401, message: '인증이 필요합니다.' },
