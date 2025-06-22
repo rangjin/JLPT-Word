@@ -8,24 +8,21 @@ import { userRepository } from '../repository/user.repository';
 class AuthService {
 
     async signup (email: string, password: string) {
-        if (await userRepository.findByEmail(email)) 
+        if (await userRepository.findByEmailorNull(email)) 
             throw new CustomException(ErrorCodes.EMAIL_ALREADY_EXISTS);
     
-        const result = await userRepository.save(email, await bcrypt.hash(password, 10));
-        console.log(result);
-    
-        return { status: 201, body: { message: '회원가입 완료' } };
+        return await userRepository.save(email, await bcrypt.hash(password, 10));
     }
 
     async login (email: string, password: string) {
-        const user = await userRepository.findByEmail(email);
+        const user = await userRepository.findByEmailorNull(email);
         console.log(user);
         if (!user || !(await bcrypt.compare(password, user.password!))) 
             throw new CustomException(ErrorCodes.INVALID_CREDENTIALS)
     
-        const token = jwt.sign({ userId: user._id, userRole: user.role }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
-    
-        return { status: 200, body: { token } };
+        return {
+            token: jwt.sign({ userId: user._id, userRole: user.role }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN })
+        };
     }
 
 }
