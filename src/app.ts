@@ -5,6 +5,7 @@ import express from 'express';
 import { connectDB } from './global/config/db.config';
 import { addTimeStamp, logger, errorHandler } from './global/middlewares';
 import { userRouter } from './domain/user/user.router';
+import { wordRouter } from './domain/word/word.router';
 
 const app = express();
 const hostname = process.env.HOST!;
@@ -17,6 +18,7 @@ app.use(addTimeStamp);
 app.use(logger);
 
 app.use('/user', userRouter);
+app.use('/word', wordRouter);
 
 app.use(errorHandler);
 
