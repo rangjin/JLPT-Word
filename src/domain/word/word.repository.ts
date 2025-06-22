@@ -2,7 +2,7 @@ import { IWord, JLPTLevel, Word } from "./word.model";
 
 class WordRepository {
 
-    async findAllByWordAndLevel(words: {
+    async findExistingWords(words: {
         word: string, 
         level: JLPTLevel
     }[]): Promise<IWord[]> {

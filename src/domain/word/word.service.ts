@@ -9,7 +9,7 @@ class WordService {
         meaning: string;
         level: JLPTLevel;
     }[]) {
-        const existingWords = await wordRepository.findAllByWordAndLevel(
+        const existingWords = await wordRepository.findExistingWords(
             words.map(w => ({ word: w.word, level: w.level }))
         );
     
