@@ -1,11 +1,11 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { CustomException } from "../../../global/errors/custom-exception";
-import { ErrorCodes } from "../../../global/errors/error-codes";
-import { JWT_SECRET, JWT_EXPIRES_IN } from '../../../global/config/jwt.config';
-import { userRepository } from '../repository/user.repository';
+import { CustomException } from "../../global/errors/custom-exception";
+import { ErrorCodes } from "../../global/errors/error-codes";
+import { JWT_SECRET, JWT_EXPIRES_IN } from '../../global/config/jwt.config';
+import { userRepository } from './user.repository';
 
-class AuthService {
+class UserService {
 
     async signup (email: string, password: string) {
         if (await userRepository.findByEmailorNull(email)) 
@@ -27,4 +27,4 @@ class AuthService {
 
 }
 
-export const authService = new AuthService();
+export const userService = new UserService();

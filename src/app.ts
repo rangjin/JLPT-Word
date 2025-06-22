@@ -3,8 +3,8 @@ dotenv.config();
 
 import express from 'express';
 import { connectDB } from './global/config/db.config';
-import { authRouter } from './domain/user/router/auth.router';
 import { addTimeStamp, logger, errorHandler } from './global/middlewares';
+import { userRouter } from './domain/user/user.router';
 
 const app = express();
 const hostname = process.env.HOST!;
@@ -16,7 +16,7 @@ app.use(express.json());
 app.use(addTimeStamp);
 app.use(logger);
 
-app.use('/auth', authRouter);
+app.use('/user', userRouter);
 
 app.use(errorHandler);
 
