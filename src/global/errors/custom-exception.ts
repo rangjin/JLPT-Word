@@ -1,4 +1,4 @@
-import { ErrorCode } from './error-code';
+import { ErrorCode } from './error-codes';
 
 export class CustomException extends Error {
     public readonly status: number;

@@ -2,9 +2,9 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import express from 'express';
-import { connectDB } from './config/db.config';
-import { authRouter } from './routers';
-import { addTimeStamp, logger, errorHandler } from './middlewares';
+import { connectDB } from './global/config/db.config';
+import { authRouter } from './domain/user/router/auth.router';
+import { addTimeStamp, logger, errorHandler } from './global/middlewares';
 
 const app = express();
 const hostname = process.env.HOST!;
