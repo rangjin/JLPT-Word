@@ -7,7 +7,6 @@ class WordController {
     async createWords(req: Request, res: Response){
         const { words } = req.body;
         const result = await wordService.createWords(words);
-        console.log(result)
         res.status(201).json(result);
     }
 

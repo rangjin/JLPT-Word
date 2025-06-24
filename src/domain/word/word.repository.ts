@@ -3,11 +3,9 @@ import { IWord, JLPTLevel, Word } from "./word.model";
 
 class WordRepository {
 
-    async findExistingWords(words: {
-        word: string, 
-    }[]): Promise<IWord[]> {
+    async findExistingWords(words: string[]): Promise<IWord[]> {
         return await Word.find({
-            $or: words
+            word: { $in: words }
         });
     }
 

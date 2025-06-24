@@ -12,7 +12,7 @@ class WordService {
         level: JLPTLevel;
     }[]) {
         const existingWords = (await wordRepository.findExistingWords(
-            words.map(w => ({ word: w.word }))
+            words.map(w => w.word)
         )).map(w => w.word);
 
         const existingSet = new Set(existingWords);

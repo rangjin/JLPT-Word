@@ -1,3 +1,4 @@
+import { ObjectId, Types } from 'mongoose';
 import { IUser, User } from './user.model';
 
 class UserRepository {
@@ -8,6 +9,32 @@ class UserRepository {
 
     async findByEmailorNull(email: String): Promise<IUser | null> {
         return await User.findOne({ email });
+    }
+
+    async memorize(userId: string, wordIds: Types.ObjectId[]) {
+        return await User.updateOne(
+            { _id: userId }, 
+            {
+                $addToSet: {
+                    memorizedWordIds: {
+                        $each: wordIds
+                    }
+                }
+            }
+        )
+    }
+
+    async unmemorize(userId: string, wordIds: Types.ObjectId[]) {
+        return await User.updateOne(
+            { _id: userId }, 
+            {
+                $pull: {
+                    memorizedWordIds: {
+                        $in: wordIds
+                    }
+                }
+            }
+        )
     }
 
 }
