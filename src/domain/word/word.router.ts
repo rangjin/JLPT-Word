@@ -14,9 +14,11 @@ class WordRouter {
     }
 
     private registerRoutes() {
-            this.router.post('/', 
-                authentication, isAdmin, createWordsValidator, validate, wordController.createWords);
-        }
+        this.router.post('/', 
+            authentication, isAdmin, createWordsValidator, validate, wordController.createWords);
+        this.router.get('/', 
+            authentication, wordController.generatePdf);
+    }
 
 }
 

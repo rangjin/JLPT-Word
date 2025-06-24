@@ -1,5 +1,7 @@
-import { JLPTLevel } from "./word.model";
+import { IWord, JLPTLevel } from "./word.model";
 import { wordRepository } from "./word.repository";
+import { shuffleArray } from '../../global/utils/shuffle.util';
+import { generatePdf } from '../../global/utils/pdf.util';
 
 class WordService {
 
@@ -9,22 +11,41 @@ class WordService {
         meaning: string;
         level: JLPTLevel;
     }[]) {
-        const existingWords = await wordRepository.findExistingWords(
-            words.map(w => ({ word: w.word, level: w.level }))
-        );
-    
-        const existingSet = new Set(
-            existingWords.map(w => `${w.word}-${w.level}`)
-        );
+        const existingWords = (await wordRepository.findExistingWords(
+            words.map(w => ({ word: w.word }))
+        )).map(w => w.word);
+
+        const existingSet = new Set(existingWords);
 
         const newWords = words.filter(w => {
-            const key = `${w.word}-${w.level}`;
+            const key = `${w.word}`;
             return !existingSet.has(key);
         });
 
-        if (newWords.length === 0) return [];
+        const savedWords = await wordRepository.saveAll(newWords);
 
-        return await wordRepository.saveAll(newWords);
+        const result = {
+            savedWords: savedWords, 
+            existingWords: existingWords
+        }
+
+        return result;
+    }
+
+    async getPdf(levels: JLPTLevel[], type: string, userId: string) {
+        let words: IWord[];
+
+        if (type === 'memorized') {
+            words = await wordRepository.findMemorizedWords(userId, levels);
+        } else if (type === 'unmemorized') {
+            words = await wordRepository.findUnmemorizedWords(userId, levels);
+        } else {
+            words = await wordRepository.findAllByLevels(levels);
+        }
+        
+        const shuffleWords = shuffleArray(words);
+
+        return generatePdf(shuffleWords);
     }
 
 }
