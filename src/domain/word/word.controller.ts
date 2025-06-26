@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { wordService } from './word.service'
 import { JLPTLevel } from './word.model';
+import { PickType } from './word.repository';
 
 class WordController {
 
@@ -14,7 +15,7 @@ class WordController {
         const { level, type } = req.query;
         const levels = (level as string).split(',') as JLPTLevel[];
 
-        const pdfBuffer = await wordService.getPdf(levels, type as string, req.userId! as string);
+        const pdfBuffer = await wordService.getPdf(levels, type as PickType, req.userId! as string);
         
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename="${level}.pdf"`);

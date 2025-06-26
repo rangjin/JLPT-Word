@@ -5,7 +5,6 @@ import { ErrorCodes } from "../../global/errors/error-codes";
 import { JWT_SECRET, JWT_EXPIRES_IN } from '../../global/config/jwt.config';
 import { userRepository } from './user.repository';
 import { wordRepository } from '../word/word.repository';
-import { Types } from 'mongoose';
 
 class UserService {
 
@@ -18,7 +17,6 @@ class UserService {
 
     async login(email: string, password: string) {
         const user = await userRepository.findByEmailorNull(email);
-        console.log(user);
         if (!user || !(await bcrypt.compare(password, user.password!))) 
             throw new CustomException(ErrorCodes.INVALID_CREDENTIALS)
     
@@ -29,7 +27,7 @@ class UserService {
 
     async memorize(userId: string, words: string[]) {
         const existingWords = await wordRepository.findExistingWords(words);
-        await userRepository.memorize(userId, existingWords.map(w => w._id) as Types.ObjectId[]);
+        await userRepository.memorize(userId, existingWords.map(w => w._id as string));
         return {
             memorizedWords: existingWords
         }
@@ -37,7 +35,7 @@ class UserService {
 
     async unmemorize(userId: string, words: string[]) {
         const existingWords = await wordRepository.findExistingWords(words);
-        const result = await userRepository.unmemorize(userId, existingWords.map(w => w._id) as Types.ObjectId[]);
+        const result = await userRepository.unmemorize(userId, existingWords.map(w => w._id as string));
         return {
             unmemorizedWords: existingWords
         }

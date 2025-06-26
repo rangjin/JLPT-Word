@@ -16,7 +16,7 @@ export const authentication = (req: Request, res: Response, next: NextFunction) 
         req.userRole = decoded.userRole;
         next();
     } catch {
-        throw new CustomException(ErrorCodes.UNAUTHORIZED)
+        throw new CustomException(ErrorCodes.INVALID_TOKEN)
     }
 };
 

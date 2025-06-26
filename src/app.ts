@@ -2,16 +2,21 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import express from 'express';
-import { connectDB } from './global/config/db.config';
+import http from 'http';
+import { connectDB } from './global/config/mongodb.config';
 import { addTimeStamp, logger, errorHandler } from './global/middlewares';
 import { userRouter } from './domain/user/user.router';
 import { wordRouter } from './domain/word/word.router';
+import { connectRedis } from './global/config/redis.config';
+import { initGateway } from './domain/quiz/quiz.gateway';
+import { WebSocketServer } from 'ws';
 
 const app = express();
 const hostname = process.env.HOST!;
 const port = parseInt(process.env.PORT!, 10);
 
 connectDB();
+connectRedis();
 
 app.use(express.json());
 app.use(addTimeStamp);
@@ -22,6 +27,9 @@ app.use('/word', wordRouter);
 
 app.use(errorHandler);
 
-app.listen(port, hostname, () => {
+const server = http.createServer(app);
+initGateway(server);
+
+server.listen(port, hostname, () => {
     console.log(`Express Server is started at http://${hostname}:${port}`);
 });
