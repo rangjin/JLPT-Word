@@ -1,0 +1,42 @@
+name: CI / CD
+
+on:
+  pull_request:
+    branches: ["develop", "main"]
+  push:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    name: ci
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - uses: actions/setup-node@v3.9.1
+        with: 
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+      
+  deploy:
+    needs: ci
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - name: Install Cloudtype CLI
+        uses: cloudtype-github-actions/deploy@v1
+        with:
+          token: ${{ secrets.CLOUDTYPE_TOKEN }}
+      - name: Deploy to Cloudtype
+        run: |
+          cloudtype deploy \
+            --app ${{ secrets.CLOUDTYPE_APP }} \
+            --project-path . \
+            --non-interactive
