@@ -22,14 +22,15 @@ export function initGateway(server: Server) {
         }
     })
 
-    wss.on('connection', async (ws, req) => {
-        quizWebSocketHandler(ws, req)
+    wss.on('connection', async (ws, req: any) => {
+        const userId = req.userId
+
+        quizService.attachClient(userId, ws);
+        quizWebSocketHandler(ws, userId)
     })
 }
 
-async function quizWebSocketHandler(ws: WebSocket, req: any) {
-    const userId = req.userId
-
+async function quizWebSocketHandler(ws: WebSocket, userId: string) {
     ws.on('message', async (raw) => {
         let msg: ClientMsg;
 
@@ -42,7 +43,6 @@ async function quizWebSocketHandler(ws: WebSocket, req: any) {
 
         switch (msg.type) {
             case 'init': {
-                quizService.attachClient(userId, ws);
                 const total = Math.max(1, Math.min(Number(msg.total) || 30, 100));
                 const levels = (msg.level as string).split(',') as JLPTLevel[];
                 await quizService.createOrResetSession(userId, levels, msg.pickType, total);
@@ -68,5 +68,4 @@ async function quizWebSocketHandler(ws: WebSocket, req: any) {
     ws.on('close', () => {
         if (userId) quizService.detachClient(userId);
     });
-
 }
