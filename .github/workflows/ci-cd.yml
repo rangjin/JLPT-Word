@@ -33,6 +33,9 @@ jobs:
         uses: cloudtype-github-actions/deploy@v1
         with:
           token: ${{ secrets.CLOUDTYPE_TOKEN }}
+          target: "@${{ secrets.CLOUDTYPE_SPACE }}/${{ secrets.CLOUDTYPE_APP }}"
+          project-path: .
+          non-interactive: true
       - name: Deploy to Cloudtype
         run: |
           cloudtype deploy \
