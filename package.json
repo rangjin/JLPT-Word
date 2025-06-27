@@ -4,6 +4,7 @@
   "main": "server.ts",
   "scripts": {
     "dev": "nodemon src/app.ts",
+    "typecheck": "tsc --noEmit", 
     "build": "tsc", 
     "start": "node dist/app.js"
   },
