@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-import express from 'express';
+import express, { Request, Response } from 'express';
 import http from 'http';
 import { connectDB } from './global/config/mongodb.config';
 import { addTimeStamp, logger, errorHandler } from './global/middlewares';
@@ -22,6 +22,9 @@ app.use(express.json());
 app.use(addTimeStamp);
 app.use(logger);
 
+app.get('/', (_req: Request, res: Response) => {
+    res.status(200).send('ok');
+});
 app.use('/user', userRouter);
 app.use('/word', wordRouter);
 
