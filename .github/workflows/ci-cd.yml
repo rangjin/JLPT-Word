@@ -29,16 +29,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4.2.2
-      - name: Install Cloudtype CLI
+      - name: Deploy to Cloudtype
         uses: cloudtype-github-actions/deploy@v1
         with:
-          token: ${{ secrets.CLOUDTYPE_TOKEN }}
-          target: "@${{ secrets.CLOUDTYPE_SPACE }}/${{ secrets.CLOUDTYPE_APP }}"
-          project-path: .
-          non-interactive: true
-      - name: Deploy to Cloudtype
-        run: |
-          cloudtype deploy \
-            --app ${{ secrets.CLOUDTYPE_APP }} \
-            --project-path . \
-            --non-interactive
+          token:   ${{ secrets.CLOUDTYPE_TOKEN }}
+          project: "@${{ secrets.CLOUDTYPE_SPACE }}/${{ secrets.CLOUDTYPE_APP }}"
