@@ -52,15 +52,12 @@ async function quizWebSocketHandler(ws: WebSocket, req: any) {
             case 'answer':
                 await quizService.handleAnswer(userId, msg.reading, msg.meaning);
                 break;
-            case 'restart': {
-                const total = Math.max(1, Math.min(Number(msg.total) || 30, 100));
-                const levels = (msg.level as string).split(',') as JLPTLevel[];
-                await quizService.createOrResetSession(userId, levels, msg.pickType, total);
-                await quizService.sendQuestion(userId);
-                break;
-            }
             case 'reconnect': {
-                await quizService.sendQuestion(userId);
+                if (!quizService.checkSession(userId)) {
+                    ws.send(JSON.stringify(WebSocketErrorCodes.NEED_INIT));
+                } else {
+                    await quizService.sendQuestion(userId);
+                }
                 break;
             }
             default:

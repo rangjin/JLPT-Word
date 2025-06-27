@@ -18,15 +18,8 @@ export interface AnswerMsg {
     meaning: string; 
 }
 
-export interface RestartMsg { 
-    type: 'restart'; 
-    total?: number; 
-    level: string;
-    pickType: PickType
-}
-
 export interface ReconnectMsg {
     type: 'reconnect';
 }
 
-export type ClientMsg = ClientAuthMsg | InitMsg | AnswerMsg | RestartMsg | ReconnectMsg;
+export type ClientMsg = ClientAuthMsg | InitMsg | AnswerMsg | ReconnectMsg;

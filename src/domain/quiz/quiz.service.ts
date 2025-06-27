@@ -1,42 +1,22 @@
 import { WebSocket } from "ws";
 import { shuffleArray } from "../../global/utils/shuffle.util";
-import { IWord, JLPTLevel } from "../word/word.model";
+import { JLPTLevel } from "../word/word.model";
 import { PickType, wordRepository } from "../word/word.repository";
 import { userRepository } from "../user/user.repository";
-
-interface QuizSession {
-    ws: WebSocket;
-    questions: string[];
-    correctWord: string[];
-    currentIndex: number;
-    score: number;
-    total: number;
-}
+import { redis, touchTTL } from "../../global/config/redis.config";
 
 class QuizService {
 
-    private sessions: Map<String, QuizSession> = new Map();
-    
+    private sockets = new Map<string, WebSocket>();
+
     attachClient(userId: string, ws: WebSocket) {
-        let session = this.sessions.get(userId);
-        if (!session) {
-            session = {
-                ws: ws, 
-                questions: [], 
-                correctWord: [], 
-                currentIndex: 0, 
-                score: 0, 
-                total: 0
-            };
-            this.sessions.set(userId, session);
-        }
-        session.ws = ws;
+        const old = this.sockets.get(userId);
+        if (old) old.close(4000, 'Reconnected');
+        this.sockets.set(userId, ws);
     }
 
     detachClient(userId: string) {
-        const session = this.sessions.get(userId);
-        if (!session) return;
-        else session.ws = null as unknown as WebSocket;
+        this.sockets.delete(userId);
     }
 
     async createOrResetSession(
@@ -45,72 +25,89 @@ class QuizService {
         type: PickType, 
         total: number
     ) {
-        const session = this.sessions.get(userId);
-        if (!session) return;
-
         const questions = (await wordRepository.pickWords(userId, levels, type, total)).map(w => w._id.toString());
-        session.questions = shuffleArray(questions) as string[];
-        session.currentIndex = 0;
-        session.score = 0;
-        session.total = total;
+        await redis.multi()
+            .del([`quiz:${userId}:meta`, `quiz:${userId}:questions`, `quiz:${userId}:correct`])
+            .hSet(`quiz:${userId}:meta`, { total: String(total), currentIndex: '0', score: '0' })
+            .rPush(`quiz:${userId}:questions`, shuffleArray(questions))
+            .exec();
+        await touchTTL(userId);
     }
 
-    async handleAnswer(userId: string, reading: string, meaning: string) {
-        const session = this.sessions.get(userId);
-        if (!session) return;
-
-        const question = (await wordRepository.findById(session.questions[session.currentIndex]))!;
-        const correct = question.reading === reading && question.meaning.includes(meaning);
-        if (correct) {
-            session.score++;
-            session.correctWord.push(question._id.toString());
-        }
-
-        session.ws.send(
-            JSON.stringify({
-                type: 'result', 
-                correctWord: question.word, 
-                correctReading: question.reading, 
-                correctMeaning: question.meaning,
-                correct: correct, 
-                current: session.currentIndex + 1, 
-                total: session.total, 
-                score: session.score
-            })
-        );
-
-        session.currentIndex++;
-        if (session.currentIndex >= session.total) {
-            const wrongWord: string[] = session.questions.filter(
-                id => !session.correctWord.includes(id)
-            );
-            await userRepository.memorize(userId, session.correctWord);
-            await userRepository.unmemorize(userId, wrongWord);
-            session.ws.send(
-                JSON.stringify({ 
-                    type: 'end', 
-                    score: session.score, 
-                    total: session.total, 
-                })
-            );
-            this.sessions.delete(userId);
-            session.ws.close(1000, "finished");
-            return;
-        }
-        await this.sendQuestion(userId);
+    checkSession(userId: string) {
+        const ws = this.sockets.get(userId);
+        if (!ws) return false;
+        else return true;
     }
 
     async sendQuestion(userId: string) {
-        const session = this.sessions.get(userId);
-        if (!session) return;
-        
-        const question: IWord = (await wordRepository.findById(session.questions[session.currentIndex]))!;
-        session.ws.send(
+        const ws = this.sockets.get(userId);
+        if (!ws) return;
+
+        const [idxStr] = await redis.hmGet(`quiz:${userId}:meta`, 'currentIndex');
+        const wordId = await redis.lIndex(`quiz:${userId}:questions`, Number(idxStr));
+        const question = await wordRepository.findById(wordId!);
+
+        ws.send(
             JSON.stringify({ 
                 type: 'quiz', 
-                word: question.word 
+                word: question!.word 
             })
         );
+    }
+
+    async handleAnswer(userId: string, reading: string, meaning: string) {
+        const ws = this.sockets.get(userId);
+        if (!ws) return;
+
+        const [idxStr, totalStr, scoreStr] =
+        await redis.hmGet(`quiz:${userId}:meta`, ['currentIndex', 'total', 'score']);
+        const idx = Number(idxStr);
+        const total = Number(totalStr);
+
+        const wordId  = await redis.lIndex(`quiz:${userId}:questions`, idx);
+        const q = await wordRepository.findById(wordId!);
+        const correct = q!.reading === reading && q!.meaning.includes(meaning);
+
+        const multi = redis.multi();
+        if (correct) {
+            multi.sAdd(`quiz:${userId}:correct`, wordId!);
+            multi.hIncrBy(`quiz:${userId}:meta`, 'score', 1);
+        }
+        multi.hIncrBy(`quiz:${userId}:meta`, 'currentIndex', 1);
+        await multi.exec();
+        await touchTTL(userId);
+
+        const newScore = correct ? Number(scoreStr) + 1 : Number(scoreStr);
+        ws.send(JSON.stringify({
+            type: 'result',
+            correctWord: q!.word,
+            correctReading: q!.reading,
+            correctMeaning: q!.meaning,
+            correct,
+            current: idx + 1,
+            total,
+            score: newScore
+        }));
+
+        if (idx + 1 >= total) return this.finish(userId, ws);
+        await this.sendQuestion(userId);
+    }
+
+    async finish(userId: string, ws: WebSocket) {
+        const [questions, correct] = await Promise.all([
+            redis.lRange(`quiz:${userId}:questions`, 0, -1),
+            redis.sMembers(`quiz:${userId}:correct`)
+        ]);
+        const wrong = questions.filter(id => !correct.includes(id));
+
+        await userRepository.memorize(userId, correct);
+        await userRepository.unmemorize(userId, wrong);
+
+        await redis.del([`quiz:${userId}:meta`, `quiz:${userId}:questions`, `quiz:${userId}:correct`]);
+        ws.send(JSON.stringify({ type: 'end', score: correct.length, total: questions.length }));
+        ws.close(1000, 'finished');
+        this.sockets.delete(userId);
     }
 
 }
