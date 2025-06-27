@@ -1,0 +1,18 @@
+name: CD
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cloudtype-github-actions/deploy@v1
+        with:
+          token: ${{ secrets.CLOUDTYPE_TOKEN }}
+      - run: |
+          cloudtype deploy \
+            --app ${{ secrets.CLOUDTYPE_APP }} \
+            --project-path . \
+            --non-interactive
