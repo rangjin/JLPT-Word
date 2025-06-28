@@ -1,4 +1,3 @@
-import { Types } from "mongoose";
 import { User } from "../user/user.model";
 import { IWord, JLPTLevel, Word } from "./word.model";
 
@@ -48,6 +47,14 @@ class WordRepository {
 
     async findById(id: string) {
         return await Word.findById(id);
+    }
+    
+    async findAllByIds(ids: string[]): Promise<IWord[]> {
+        return await Word.find({
+            _id: { 
+                $in: ids
+            }
+        });
     }
 
 }
