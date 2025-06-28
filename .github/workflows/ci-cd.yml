@@ -48,9 +48,9 @@ jobs:
               start: npm start
               env:
                 - name: HOST
-                  secret: 0.0.0.0
+                  value: 0.0.0.0
                 - name: PORT
-                  secret: "5000"
+                  value: "5000"
                 - name: JWT_SECRET
                   secret: JWT_SECRET
                 - name: MONGO_URI
