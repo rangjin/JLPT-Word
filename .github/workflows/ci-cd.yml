@@ -34,7 +34,6 @@ jobs:
         with:
           token: ${{ secrets.CLOUDTYPE_TOKEN }}
           project: "@${{ secrets.CLOUDTYPE_SPACE }}/${{ secrets.CLOUDTYPE_APP }}"
-          stage: main
           yaml: |
             name: jlpt-word
             app: node@22
