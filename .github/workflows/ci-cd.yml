@@ -32,10 +32,10 @@ jobs:
       - name: Deploy to Cloudtype
         uses: cloudtype-github-actions/deploy@v1
         with:
-          token:   ${{ secrets.CLOUDTYPE_TOKEN }}
+          token: ${{ secrets.CLOUDTYPE_TOKEN }}
           project: "@${{ secrets.CLOUDTYPE_SPACE }}/${{ secrets.CLOUDTYPE_APP }}"
           stage: main
-          yaml: >
+          yaml: |
             name: jlpt-word
             app: node@22
             resources:
