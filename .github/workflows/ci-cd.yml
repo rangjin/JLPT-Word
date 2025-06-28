@@ -34,4 +34,38 @@ jobs:
         with:
           token:   ${{ secrets.CLOUDTYPE_TOKEN }}
           project: "@${{ secrets.CLOUDTYPE_SPACE }}/${{ secrets.CLOUDTYPE_APP }}"
-          yaml: cloudtype.yml
+          stage: main
+          yaml: >
+            name: jlpt-word
+            app: node@22
+            resources:
+              spot: true
+              memory: 0.5
+            options:
+              ports: "5000"
+              install: npm ci
+              build: npm run build
+              start: npm start
+              env:
+                - name: HOST
+                  secret: 0.0.0.0
+                - name: PORT
+                  secret: "5000"
+                - name: JWT_SECRET
+                  secret: JWT_SECRET
+                - name: MONGO_URI
+                  secret: MONGO_URI
+                - name: REDIS_USERNAME
+                  secret: REDIS_USERNAME
+                - name: REDIS_PASSWORD
+                  secret: REDIS_PASSWORD
+                - name: REDIS_HOST
+                  secret: REDIS_HOST
+                - name: REDIS_PORT
+                  secret: REDIS_PORT
+              buildenv: []
+              healthz: /
+            context:
+              git:
+                url: https://github.com/rangjin/JLPT-Word.git
+                branch: main
