@@ -105,7 +105,17 @@ class QuizService {
         await userRepository.unmemorize(userId, wrong);
 
         await redis.del([`quiz:${userId}:meta`, `quiz:${userId}:questions`, `quiz:${userId}:correct`]);
-        ws.send(JSON.stringify({ type: 'end', score: correct.length, total: questions.length }));
+        const wrongWords = (await wordRepository.findAllByIds(wrong))
+            .map(w => {
+                    return {
+                        word: w.word, 
+                        reading: w.reading, 
+                        meaning: w.meaning, 
+                        level: w.level
+                    }
+                }
+            );
+        ws.send(JSON.stringify({ type: 'end', score: correct.length, total: questions.length, wrongWords: wrongWords }));
         ws.close(1000, 'finished');
         this.sockets.delete(userId);
     }
