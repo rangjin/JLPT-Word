@@ -5,8 +5,8 @@ import { IWord } from "../../domain/word/word.model";
 export function generatePdf(words: IWord[]) {
     const doc = new PDFDocument({ margin: 30 });
     const fontPath = path.join(__dirname, '../../assets/fonts/PretendardJP-Regular.otf');
-    doc.registerFont('Noto', fontPath);
-    doc.font('Noto');
+    doc.registerFont('PretendardJP', fontPath);
+    doc.font('PretendardJP');
 
     const buffers: Buffer[] = [];
 
