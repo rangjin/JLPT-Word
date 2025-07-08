@@ -15,11 +15,11 @@ class WordController {
         const { level, type } = req.query;
         const levels = (level as string).split(',') as JLPTLevel[];
 
-        const pdfBuffer = await wordService.getPdf(levels, type as PickType, req.userId! as string);
-        
+        const pdfStream = await wordService.getPdfStream(levels, type as PickType, req.userId!);
         res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename="${level}.pdf"`);
-        res.send(pdfBuffer);
+        res.setHeader('Content-Disposition',`attachment; filename="${level}.pdf"`,);
+
+        pdfStream.pipe(res);
     }
     
 }
