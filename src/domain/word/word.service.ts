@@ -40,7 +40,8 @@ class WordService {
 
         try {
             return generatePdfStream(shuffleWords);
-        } catch (_) {
+        } catch (err) {
+            console.error(err);
             throw new CustomException(ErrorCodes.PDF_GENERATION_FAILED)
         }
     }
