@@ -4,7 +4,7 @@ import { IWord } from "../../domain/word/word.model";
 
 export function generatePdfStream(words: IWord[]) {
     const doc = new PDFDocument({ margin: 30 });
-    const fontPath = path.join(__dirname, '../../assets/fonts/PretendardJP-Regular.otf');
+    const fontPath = path.join(__dirname, '../../../src/assets/fonts/PretendardJP-Regular.otf');
     doc.registerFont('PretendardJP', fontPath).font('PretendardJP');
 
     const pageWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
