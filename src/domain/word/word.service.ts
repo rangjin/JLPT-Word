@@ -1,7 +1,9 @@
-import { IWord, JLPTLevel } from "./word.model";
+import { JLPTLevel } from "./word.model";
 import { PickType, wordRepository } from "./word.repository";
 import { shuffleArray } from '../../global/utils/shuffle.util';
-import { generatePdf } from '../../global/utils/pdf.util';
+import { generatePdfStream } from '../../global/utils/pdf.util';
+import { CustomException } from "../../global/errors/custom-exception";
+import { ErrorCodes } from "../../global/errors/error-codes";
 
 class WordService {
 
@@ -32,11 +34,15 @@ class WordService {
         return result;
     }
 
-    async getPdf(levels: JLPTLevel[], type: PickType, userId: string) {
+    async getPdfStream(levels: JLPTLevel[], type: PickType, userId: string) {
         const words = await wordRepository.pickWords(userId, levels, type, null);
         const shuffleWords = shuffleArray(words);
 
-        return generatePdf(shuffleWords);
+        try {
+            return generatePdfStream(shuffleWords);
+        } catch (_) {
+            throw new CustomException(ErrorCodes.PDF_GENERATION_FAILED)
+        }
     }
 
 }
