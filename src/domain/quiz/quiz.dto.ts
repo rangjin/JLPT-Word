@@ -1,10 +1,5 @@
 import { PickType } from "../word/word.repository";
 
-export interface ClientAuthMsg { 
-    type: 'auth'; 
-    token: string; 
-}
-
 export interface InitMsg { 
     type: 'init'; 
     total?: number; 
@@ -20,6 +15,7 @@ export interface AnswerMsg {
 
 export interface ReconnectMsg {
     type: 'reconnect';
+    uuid: string;
 }
 
-export type ClientMsg = ClientAuthMsg | InitMsg | AnswerMsg | ReconnectMsg;
+export type ClientMsg = InitMsg | AnswerMsg | ReconnectMsg;

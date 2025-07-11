@@ -5,6 +5,7 @@ import { ClientMsg } from "./quiz.dto";
 import { WebSocketErrorCodes } from "../../global/errors/websocket-error-codes";
 import { Server } from "http";
 import { authentication } from "../../global/middlewares/auth.middleware";
+import { randomUUID } from "crypto";
 
 export function initGateway(server: Server) {
     const wss = new WebSocketServer({ noServer: true });
@@ -24,13 +25,15 @@ export function initGateway(server: Server) {
 
     wss.on('connection', async (ws, req: any) => {
         const userId = req.userId
+        const uuid = randomUUID();
 
-        quizService.attachClient(userId, ws);
-        quizWebSocketHandler(ws, userId)
+        quizWebSocketHandler(ws, userId, uuid)
     })
 }
 
-async function quizWebSocketHandler(ws: WebSocket, userId: string) {
+async function quizWebSocketHandler(ws: WebSocket, userId: string, initialUuid: string) {
+    let uuid = initialUuid;
+
     ws.on('message', async (raw) => {
         let msg: ClientMsg;
 
@@ -45,27 +48,40 @@ async function quizWebSocketHandler(ws: WebSocket, userId: string) {
             case 'init': {
                 const total = Math.max(1, Math.min(Number(msg.total) || 30, 100));
                 const levels = (msg.level as string).split(',') as JLPTLevel[];
-                await quizService.createOrResetSession(userId, levels, msg.pickType, total);
-                await quizService.sendQuestion(userId);
+                await quizService.createOrResetSession(userId, uuid, levels, msg.pickType, total);
+                ws.send(JSON.stringify({
+                    uuid: uuid, 
+                    question: await quizService.sendQuestion(uuid)
+                }));
                 break;
             }
             case 'answer':
-                await quizService.handleAnswer(userId, msg.reading, msg.meaning);
+                const answer = await quizService.handleAnswer(uuid, msg.reading, msg.meaning);
+                
+                if (answer!.current >= answer!.total) {
+                    ws.send(JSON.stringify({
+                        answer: answer, 
+                        result: await quizService.finish(userId, uuid)
+                    }))
+                    ws.close(1000, 'finished');
+                } else {
+                    ws.send(JSON.stringify({
+                        answer: answer, 
+                        question: await quizService.sendQuestion(uuid)
+                    }))
+                }
                 break;
             case 'reconnect': {
-                if (!quizService.checkSession(userId)) {
+                if (!await quizService.checkSession(msg.uuid)) {
                     ws.send(JSON.stringify(WebSocketErrorCodes.NEED_INIT));
                 } else {
-                    await quizService.sendQuestion(userId);
+                    uuid = msg.uuid;
+                    ws.send(JSON.stringify(await quizService.sendQuestion(msg.uuid)));
                 }
                 break;
             }
             default:
                 ws.send(JSON.stringify(WebSocketErrorCodes.WRONG_TYPE));
         }
-    });
-
-    ws.on('close', () => {
-        if (userId) quizService.detachClient(userId);
     });
 }
