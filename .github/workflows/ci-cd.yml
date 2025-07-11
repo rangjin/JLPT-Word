@@ -41,15 +41,13 @@ jobs:
               spot: true
               memory: 0.5
             options:
-              ports: "5000"
+              ports: "3000"
               install: npm ci
               build: npm run build
               start: npm start
               env:
-                - name: HOST
-                  value: 0.0.0.0
                 - name: PORT
-                  value: "5000"
+                  value: "3000"
                 - name: JWT_SECRET
                   secret: JWT_SECRET
                 - name: MONGO_URI

@@ -9,10 +9,9 @@ import { userRouter } from './domain/user/user.router';
 import { wordRouter } from './domain/word/word.router';
 import { connectRedis } from './global/config/redis.config';
 import { initGateway } from './domain/quiz/quiz.gateway';
-import { WebSocketServer } from 'ws';
+import { quizRouter } from './domain/quiz/quiz.router';
 
 const app = express();
-const hostname = process.env.HOST!;
 const port = parseInt(process.env.PORT!, 10);
 
 connectDB();
@@ -27,12 +26,13 @@ app.get('/', (_req: Request, res: Response) => {
 });
 app.use('/user', userRouter);
 app.use('/word', wordRouter);
+app.use('/quiz', quizRouter);
 
 app.use(errorHandler);
 
 const server = http.createServer(app);
 initGateway(server);
 
-server.listen(port, hostname, () => {
-    console.log(`Express Server is started at http://${hostname}:${port}`);
+server.listen(port, () => {
+    console.log(`Express Server is started at ${port}`);
 });
