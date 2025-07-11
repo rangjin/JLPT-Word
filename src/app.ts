@@ -9,7 +9,7 @@ import { userRouter } from './domain/user/user.router';
 import { wordRouter } from './domain/word/word.router';
 import { connectRedis } from './global/config/redis.config';
 import { initGateway } from './domain/quiz/quiz.gateway';
-import { WebSocketServer } from 'ws';
+import { quizRouter } from './domain/quiz/quiz.router';
 
 const app = express();
 const hostname = process.env.HOST!;
@@ -27,6 +27,7 @@ app.get('/', (_req: Request, res: Response) => {
 });
 app.use('/user', userRouter);
 app.use('/word', wordRouter);
+app.use('/quiz', quizRouter);
 
 app.use(errorHandler);
 
